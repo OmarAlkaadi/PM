@@ -28,12 +28,28 @@ public class KundeView{
     private ComboBox<Integer> 
         cmbBxNummerHaus                 = new ComboBox<Integer>();
     private Label lblVorname         	= new Label("Vorname");
-    private TextField txtVorname     	= new TextField();   
+    private TextField txtVorname     	= new TextField();
+    
+    // Eingabefelder für die Kundendaten(neue Labels)
+    private Label lblKundennummer = new Label("Kundennummer");
+    private TextField txtKundennummer = new TextField();
+
+    private Label lblNachname = new Label("Nachname");
+    private TextField txtNachname = new TextField();
+
+    private Label lblTelefonnummer = new Label("Telefonnummer");
+    private TextField txtTelefonnummer = new TextField();
+
+    private Label lblEmail = new Label("E-Mail");
+    private TextField txtEmail = new TextField();
+    // Anzeige der Dachgeschossinformation
+    private Label lblDachgeschoss = new Label("Dachgeschoss");
+    private Label lblDachgeschossWert = new Label("-");
     private Button btnAnlegen	 	  	= new Button("Anlegen");
-    private Button btnAendern 	      	= new Button("�ndern");
-    private Button btnLoeschen 	 		= new Button("L�schen");
+    private Button btnAendern 	      	= new Button("Ändern");
+    private Button btnLoeschen 	 		= new Button("Löschen");
     private MenuBar mnBar 			  	= new MenuBar();
-    private Menu mnSonderwuensche    	= new Menu("Sonderw�nsche");
+    private Menu mnSonderwuensche    	= new Menu("Sonderwünsche");
     private MenuItem mnItmGrundriss  	= new MenuItem("Grundrissvarianten");
     //-------Ende Attribute der grafischen Oberflaeche-------
   
@@ -49,7 +65,7 @@ public class KundeView{
         this.kundeModel = kundeModel;
         
         primaryStage.setTitle(this.kundeModel.getUeberschrift());	
-	    Scene scene = new Scene(borderPane, 550, 400);
+	    Scene scene = new Scene(borderPane, 650, 500); //Fenster vergrößert, damit alle Eingabefelder sichtbar sind
 	    primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -72,14 +88,36 @@ public class KundeView{
 	    gridPane.add(cmbBxNummerHaus, 1, 2);
 	    cmbBxNummerHaus.setMinSize(150,  25);
 	    cmbBxNummerHaus.setItems(this.kundeModel.getPlannummern());
-	    gridPane.add(lblVorname, 0, 3);
-	    gridPane.add(txtVorname, 1, 3);
+	    
+	    gridPane.add(lblKundennummer, 0, 3);
+	    gridPane.add(txtKundennummer, 1, 3);
+	    
+	    gridPane.add(lblVorname, 0, 4);
+	    gridPane.add(txtVorname, 1, 4);
+	    //kundennummer, nachname, telefonnummer, email und dachgeschoss wurde hinzugefuegt 
+	  
+
+	    gridPane.add(lblNachname, 0, 5);
+	    gridPane.add(txtNachname, 1, 5);
+
+	    gridPane.add(lblTelefonnummer, 0, 6);
+	    gridPane.add(txtTelefonnummer, 1, 6);
+
+	    gridPane.add(lblEmail, 0, 7);
+	    gridPane.add(txtEmail, 1, 7);
+
+	    gridPane.add(lblDachgeschoss, 0, 8);
+	    gridPane.add(lblDachgeschossWert, 1, 8);
+	    
+	    
+	    
 	    // Buttons
-	    gridPane.add(btnAnlegen, 0, 7);
+	    // Buttons unter den Eingabefeldern platzieren (auf 10 gesetzt !)
+	    gridPane.add(btnAnlegen, 0, 10);
 	    btnAnlegen.setMinSize(150,  25);
-	    gridPane.add(btnAendern, 1, 7);
+	    gridPane.add(btnAendern, 1, 10);
 	    btnAendern.setMinSize(150,  25);
-	    gridPane.add(btnLoeschen, 2, 7);
+	    gridPane.add(btnLoeschen, 2, 10);
 	    btnLoeschen.setMinSize(150,  25);
 	    // MenuBar und Menu
 	    borderPane.setTop(mnBar);
@@ -107,7 +145,24 @@ public class KundeView{
 	    });
     }
     
-    private void holeInfoDachgeschoss(){ 
+    private void holeInfoDachgeschoss(){
+    	
+    	Integer nummer = cmbBxNummerHaus.getValue(); // Ausgewählte Plannummer holen
+    	
+    	if (nummer == null) {
+	        lblDachgeschossWert.setText("-");
+	        return;
+	    }
+    	// Diese Häuser haben kein Dachgeschoss
+	    if (nummer == 1 || nummer == 6 || nummer == 7 ||
+	        nummer == 14 || nummer == 15 || nummer == 24) {
+	        lblDachgeschossWert.setText("Nein");
+	    } else {
+	        lblDachgeschossWert.setText("Ja");
+	    }
+    	
+
+    	   
     }
     
     private void leseKunden(){

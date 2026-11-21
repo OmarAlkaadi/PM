@@ -1,9 +1,11 @@
 package gui.kunde;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import business.kunde.Kunde;
 import business.kunde.KundeModel;
+import business.kunde.KundeValidator;
 import gui.grundriss.GrundrissControl;
 import javafx.stage.Stage;
 
@@ -42,10 +44,17 @@ public class KundeControl {
     }
     
 	/**
-	 * speichert ein Kunde-Objekt in die Datenbank
+	 * prueft die Daten eines Kunde-Objekts und speichert es danach in die Datenbank.
+	 * Bei ungueltigen Daten wird eine Fehlermeldung angezeigt und nicht gespeichert.
 	 * @param kunde, Kunde-Objekt, welches zu speichern ist
 	 */
     public void speichereKunden(Kunde kunde){
+    	List<String> fehler = KundeValidator.pruefe(kunde);
+    	if (!fehler.isEmpty()){
+    		this.kundeView.zeigeFehlermeldung("Ungueltige Eingabe",
+    			String.join("\n", fehler));
+    		return;
+    	}
       	try{
     		kundeModel.speichereKunden(kunde);
     	}

@@ -169,8 +169,14 @@ public class KundeView{
     }
     
     private void legeKundenAn(){
-         Kunde kunde = null;
-         // Objekt kunde fuellen
+         Kunde kunde = new Kunde();
+         Integer plannummer = cmbBxNummerHaus.getValue();
+         // ohne Auswahl wird 0 gesetzt, die Pruefung lehnt dies ab
+         kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+         kunde.setVorname(txtVorname.getText());
+         kunde.setNachname(txtNachname.getText());
+         kunde.setTelefonnummer(txtTelefonnummer.getText());
+         kunde.setEmail(txtEmail.getText());
          kundeControl.speichereKunden(kunde);
    	}
     

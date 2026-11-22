@@ -10,6 +10,9 @@ import java.util.List;
  * 1.2 Telefonnummer oder E-Mail-Adresse muessen vorhanden sein. Die Telefonnummer
  *     darf nur aus Ziffern bestehen, die E-Mail-Adresse muss ein @ enthalten.
  * 1.3 Die Plannummer des Hauses muss zwischen 1 und 24 liegen.
+ * 1.4 Die Kundennummer muss vorhanden sein und nur aus Ziffern bestehen
+ *     (Absprache mit dem Product Owner). Die Eindeutigkeit kann hier nicht
+ *     geprueft werden, sie wird ueber die Datenbank sichergestellt.
  */
 public final class KundeValidator {
 
@@ -41,6 +44,13 @@ public final class KundeValidator {
 		if (nummer < MIN_PLANNUMMER || nummer > MAX_PLANNUMMER) {
 			fehler.add("Die Plannummer muss zwischen " + MIN_PLANNUMMER
 				+ " und " + MAX_PLANNUMMER + " liegen.");
+		}
+
+		// 1.4 Kundennummer
+		if (istLeer(kunde.getKundennummer())) {
+			fehler.add("Die Kundennummer muss angegeben werden.");
+		} else if (!bestehtNurAusZiffern(kunde.getKundennummer().trim())) {
+			fehler.add("Die Kundennummer darf nur aus Ziffern bestehen.");
 		}
 
 		// 1.1 Nachname

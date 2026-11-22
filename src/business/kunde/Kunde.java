@@ -3,6 +3,8 @@ package business.kunde;
 public class Kunde {
 	
 	private int hausnummer;
+	// als String, damit auch fuehrende Nullen moeglich sind
+	private String kundennummer;
 	private String vorname;
 	private String nachname;
 	private String telefonnummer;
@@ -14,6 +16,14 @@ public class Kunde {
 
 	public void setHausnummer(int hausnummer) {
 		this.hausnummer = hausnummer;
+	}
+
+	public String getKundennummer() {
+		return kundennummer;
+	}
+
+	public void setKundennummer(String kundennummer) {
+		this.kundennummer = kundennummer;
 	}
 
 	public String getVorname() {

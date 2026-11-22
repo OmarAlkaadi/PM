@@ -173,6 +173,7 @@ public class KundeView{
          Integer plannummer = cmbBxNummerHaus.getValue();
          // ohne Auswahl wird 0 gesetzt, die Pruefung lehnt dies ab
          kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+         kunde.setKundennummer(txtKundennummer.getText());
          kunde.setVorname(txtVorname.getText());
          kunde.setNachname(txtNachname.getText());
          kunde.setTelefonnummer(txtTelefonnummer.getText());

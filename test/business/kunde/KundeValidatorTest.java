@@ -17,6 +17,7 @@ class KundeValidatorTest {
 	private Kunde erzeugeGueltigenKunden() {
 		Kunde kunde = new Kunde();
 		kunde.setHausnummer(2);
+		kunde.setKundennummer("0042");
 		kunde.setVorname("Erika");
 		kunde.setNachname("Mustermann");
 		kunde.setTelefonnummer("0234123456");
@@ -164,6 +165,47 @@ class KundeValidatorTest {
 		assertFalse(KundeValidator.istGueltig(kunde));
 	}
 
+	// ---- 1.4 Kundennummer ----
+
+	@Test
+	void kundennummerMitFuehrendenNullenWirdAkzeptiert() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setKundennummer("0001");
+		assertTrue(KundeValidator.istGueltig(kunde));
+	}
+
+	@Test
+	void kundennummerNullWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setKundennummer(null);
+		assertFalse(KundeValidator.istGueltig(kunde));
+	}
+
+	@Test
+	void kundennummerLeerOderNurLeerzeichenWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setKundennummer("");
+		assertFalse(KundeValidator.istGueltig(kunde));
+		kunde.setKundennummer("   ");
+		assertFalse(KundeValidator.istGueltig(kunde));
+	}
+
+	@Test
+	void kundennummerMitBuchstabenWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setKundennummer("12a4");
+		assertFalse(KundeValidator.istGueltig(kunde));
+	}
+
+	@Test
+	void kundennummerMitSonderzeichenOderLeerzeichenWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setKundennummer("12-34");
+		assertFalse(KundeValidator.istGueltig(kunde));
+		kunde.setKundennummer("12 34");
+		assertFalse(KundeValidator.istGueltig(kunde));
+	}
+
 	// ---- Sonderfaelle ----
 
 	@Test
@@ -176,11 +218,12 @@ class KundeValidatorTest {
 	void mehrereFehlerWerdenAlleGemeldet() {
 		Kunde kunde = new Kunde();
 		kunde.setHausnummer(0);
+		kunde.setKundennummer("");
 		kunde.setNachname("");
 		kunde.setTelefonnummer("");
 		kunde.setEmail("");
 		List<String> fehler = KundeValidator.pruefe(kunde);
-		// Plannummer, Nachname, fehlende Telefonnummer/E-Mail
-		assertEquals(3, fehler.size());
+		// Plannummer, Kundennummer, Nachname, fehlende Telefonnummer/E-Mail
+		assertEquals(4, fehler.size());
 	}
 }

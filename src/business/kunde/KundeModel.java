@@ -11,6 +11,9 @@ public final class KundeModel {
 	// enthaelt den aktuellen Kunden
 	private Kunde kunde;
 	
+	// Zugriff auf die Tabelle Kunde in der Datenbank
+	private final KundeDAO kundeDAO = new KundeDAO();
+	
 	/* enthaelt die Plannummern der Haeuser, diese muessen vielleicht noch
 	   in eine andere Klasse verschoben werden */
 	ObservableList<Integer> plannummern = 
@@ -66,6 +69,8 @@ public final class KundeModel {
 	public void speichereKunden(Kunde kunde)
 	    throws SQLException, Exception{
         // Speicherung des Kunden in der DB
+		kundeDAO.speichere(kunde);
    	    this.kunde = kunde;
-	}  
+	}
+
 }

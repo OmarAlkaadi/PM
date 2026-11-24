@@ -8,6 +8,7 @@ import business.kunde.KundeModel;
 import business.kunde.KundeValidator;
 import gui.grundriss.GrundrissControl;
 import javafx.stage.Stage;
+import ownUtil.MeldungFenster;
 
 /**
  * Klasse, welche das Grundfenster mit den Kundendaten kontrolliert.
@@ -57,11 +58,19 @@ public class KundeControl {
     	}
       	try{
     		kundeModel.speichereKunden(kunde);
+
+			  // Erfolgsmeldung anzeigen
+				MeldungFenster.zeigeErfolg(
+					"Der Kunde " + kunde.getVorname() + " "
+					+ kunde.getNachname()
+					+ " wurde erfolgreich gespeichert."
+     
+		);
     	}
     	catch(SQLException exc){
     		exc.printStackTrace();
     		this.kundeView.zeigeFehlermeldung("SQLException",
-                "Fehler beim Speichern in die Datenbank");
+                "Fehler beim Speichern in die Datenbank:\n" + exc.getMessage());
     	}
     	catch(Exception exc){
     		exc.printStackTrace();

@@ -179,6 +179,8 @@ public class KundeView{
          kunde.setTelefonnummer(txtTelefonnummer.getText());
          kunde.setEmail(txtEmail.getText());
          kundeControl.speichereKunden(kunde);
+
+		 
    	}
     
   	private void aendereKunden(){

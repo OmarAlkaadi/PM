@@ -1,5 +1,7 @@
 package business.kunde;
-
+import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.sql.SQLException;
 import javafx.collections.*;
   
@@ -65,7 +67,51 @@ public final class KundeModel {
 	 */
 	public void speichereKunden(Kunde kunde)
 	    throws SQLException, Exception{
-        // Speicherung des Kunden in der DB
+       
+			//Jetzt nur CSV da wir kein DB haben
+
+			File datei = new File("kunden.csv");
+			boolean existiert = !datei.exists() || datei.length() == 0;
+		
+			try{
+				BufferedWriter writer = new BufferedWriter(new FileWriter(datei, true));
+				if (existiert) {
+					writer.write("Hausnummer;Kundennummer;Vorname;"
+                    + "Nachname;Telefonnummer;Email");
+          		  	writer.newLine();
+				}
+				
+
+				// Kundendaten speichern
+				writer.write(
+					kunde.getHausnummer() + ";" +
+					csvWert(kunde.getKundennummer()) + ";" +
+					csvWert(kunde.getVorname()) + ";" +
+					csvWert(kunde.getNachname()) + ";" +
+					csvWert(kunde.getTelefonnummer()) + ";" +
+					csvWert(kunde.getEmail())
+				);
+
+				writer.newLine();
+
+				// Datei schließen
+				writer.close();
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+
+		// Speicherung des Kunden in der DB (Später, wenn DB vorhanden)
    	    this.kunde = kunde;
-	}  
+	}
+	
+	
+	//Hilfsmethode, um Sonderzeichen in CSV-Dateien zu maskieren
+	private String csvWert(String wert) {
+    if (wert == null) {
+        return "";
+    }
+    	return "\"" + wert.replace("\"", "\"\"") + "\"";
+	}
 }

@@ -82,6 +82,7 @@ public class KundeControl {
 
 
 
+    //andern
     public void aendereKunden(Kunde kunde){
     	List<String> fehler = KundeValidator.pruefe(kunde);
     	if (!fehler.isEmpty()){
@@ -110,6 +111,38 @@ public class KundeControl {
     		exc.printStackTrace();
     		this.kundeView.zeigeFehlermeldung("SQLException",
                 "Fehler beim Ändern in die Datenbank:\n" + exc.getMessage());
+    	}
+    	catch(Exception exc){
+    		exc.printStackTrace();
+    		this.kundeView.zeigeFehlermeldung("Exception",
+                "Unbekannter Fehler");
+    	}
+    }
+
+
+    //löschen
+    public void loescheKunden(Kunde kunde){
+    	try{
+    		boolean geloescht = kundeModel.loescheKunden(kunde);
+    		if (geloescht) {
+    			MeldungFenster.zeigeErfolg(
+    				"Der Kunde " + kunde.getVorname() + " "
+    				+ kunde.getNachname()
+    				+ " wurde erfolgreich gelöscht."
+    			);
+    		}else{
+                    this.kundeView.zeigeFehlermeldung(
+                    "Kunde nicht gefunden",
+                    "Es existiert kein Kunde mit der Kundennummer "
+                    + kunde.getKundennummer()
+    );
+
+            }
+    	}
+    	catch(SQLException exc){
+    		exc.printStackTrace();
+    		this.kundeView.zeigeFehlermeldung("SQLException",
+                "Fehler beim Löschen in die Datenbank:\n" + exc.getMessage());
     	}
     	catch(Exception exc){
     		exc.printStackTrace();

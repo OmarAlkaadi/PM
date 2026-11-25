@@ -199,8 +199,22 @@ public class KundeView{
         kundeControl.aendereKunden(kunde);
     }
   	
+    //loeschen
    	private void loescheKunden(){
-   	}
+        Kunde kunde = new Kunde();
+
+        Integer plannummer = cmbBxNummerHaus.getValue();
+
+        kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+        kunde.setKundennummer(txtKundennummer.getText());
+        kunde.setVorname(txtVorname.getText());
+        kunde.setNachname(txtNachname.getText());
+        kunde.setTelefonnummer(txtTelefonnummer.getText());
+        kunde.setEmail(txtEmail.getText());
+
+        kundeControl.loescheKunden(kunde);
+    }
+   	
    	
    /** zeigt ein Fehlermeldungsfenster an
     * @param ueberschrift, Ueberschrift fuer das Fehlermeldungsfenster

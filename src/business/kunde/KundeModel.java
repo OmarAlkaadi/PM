@@ -87,4 +87,18 @@ public final class KundeModel {
     return geaendert;
 }
 
+
+//löschen
+public boolean loescheKunden(Kunde kunde)
+		throws SQLException, Exception {
+
+	boolean geloescht = kundeDAO.loesche(kunde.getKundennummer());
+
+	if (geloescht) {
+		this.kunde = null;
+	}
+
+	return geloescht;
+
+	}
 }

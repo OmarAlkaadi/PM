@@ -169,6 +169,7 @@ public class KundeDAO {
 		}
 	}
 
+	// macht aus einem ResultSet-Eintrag ein Kunde-Objekt
 	private Kunde erzeugeKunde(ResultSet rs) throws SQLException {
 		Kunde kunde = new Kunde();
 		kunde.setKundennummer(rs.getString("Kundennummer"));

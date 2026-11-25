@@ -183,8 +183,21 @@ public class KundeView{
 		 
    	}
     
-  	private void aendereKunden(){
-   	}
+    private void aendereKunden() {
+
+        Kunde kunde = new Kunde();
+
+        Integer plannummer = cmbBxNummerHaus.getValue();
+
+        kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+        kunde.setKundennummer(txtKundennummer.getText());
+        kunde.setVorname(txtVorname.getText());
+        kunde.setNachname(txtNachname.getText());
+        kunde.setTelefonnummer(txtTelefonnummer.getText());
+        kunde.setEmail(txtEmail.getText());
+
+        kundeControl.aendereKunden(kunde);
+    }
   	
    	private void loescheKunden(){
    	}

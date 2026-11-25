@@ -73,4 +73,18 @@ public final class KundeModel {
    	    this.kunde = kunde;
 	}
 
+
+	//Änderen
+	public boolean aendereKunden(Kunde kunde)
+        throws SQLException, Exception {
+
+    boolean geaendert = kundeDAO.aendere(kunde);
+
+    if (geaendert) {
+        this.kunde = kunde;
+    }
+
+    return geaendert;
+}
+
 }

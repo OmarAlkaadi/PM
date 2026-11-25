@@ -1,6 +1,6 @@
 package gui.kunde;
 
-import java.sql.SQLException;
+import java.io.IOException;
 import java.util.List;
 
 import business.kunde.Kunde;
@@ -44,38 +44,63 @@ public class KundeControl {
     	this.grundrissControl.oeffneGrundrissView();
     }
     
-	/**
-	 * prueft die Daten eines Kunde-Objekts und speichert es danach in die Datenbank.
-	 * Bei ungueltigen Daten wird eine Fehlermeldung angezeigt und nicht gespeichert.
-	 * @param kunde, Kunde-Objekt, welches zu speichern ist
-	 */
-    public void speichereKunden(Kunde kunde){
-    	List<String> fehler = KundeValidator.pruefe(kunde);
-    	if (!fehler.isEmpty()){
-    		this.kundeView.zeigeFehlermeldung("Ungueltige Eingabe",
-    			String.join("\n", fehler));
-    		return;
-    	}
-      	try{
-    		kundeModel.speichereKunden(kunde);
+    // Kunden anlegen
+    public void speichereKunden(Kunde kunde) {
+        List<String> fehler = KundeValidator.pruefe(kunde);
+        if (!fehler.isEmpty()) {
+            kundeView.zeigeFehlermeldung("Ungültige Eingabe", String.join("\n", fehler));
+            return;
+        }
 
-			  // Erfolgsmeldung anzeigen
-				MeldungFenster.zeigeErfolg(
-					"Der Kunde " + kunde.getVorname() + " "
-					+ kunde.getNachname()
-					+ " wurde erfolgreich gespeichert."
-     
-		);
-    	}
-    	catch(SQLException exc){
-    		exc.printStackTrace();
-    		this.kundeView.zeigeFehlermeldung("SQLException",
-                "Fehler beim Speichern in die Datenbank");
-    	}
-    	catch(Exception exc){
-    		exc.printStackTrace();
-    		this.kundeView.zeigeFehlermeldung("Exception",
-                "Unbekannter Fehler");
-    	}
+        try {
+            kundeModel.speichereKunden(kunde);
+            MeldungFenster.zeigeErfolg("Der Kunde " + kunde.getVorname() + " "
+                + kunde.getNachname() + " wurde erfolgreich angelegt.");
+        } catch (IOException exc) {
+            exc.printStackTrace();
+            kundeView.zeigeFehlermeldung("Fehler beim Anlegen", exc.getMessage());
+        }
+    }
+
+    // Kunden ändern
+    public void aendereKunden(Kunde kunde) {
+        List<String> fehler = KundeValidator.pruefe(kunde);
+        if (!fehler.isEmpty()) {
+            kundeView.zeigeFehlermeldung("Ungültige Eingabe", String.join("\n", fehler));
+            return;
+        }
+
+        try {
+            kundeModel.aendereKunden(kunde);
+            MeldungFenster.zeigeErfolg("Die Daten des Kunden " + kunde.getVorname() + " "
+                + kunde.getNachname() + " wurden erfolgreich geändert.");
+        } catch (IOException exc) {
+            exc.printStackTrace();
+            kundeView.zeigeFehlermeldung("Fehler beim Ändern", exc.getMessage());
+        }
+    }
+
+    // Kunden löschen
+    public boolean loescheKunden(int hausnummer) {
+        try {
+            kundeModel.loescheKunden(hausnummer);
+            MeldungFenster.zeigeErfolg("Der Kunde wurde erfolgreich gelöscht.");
+            return true;
+        } catch (IOException exc) {
+            exc.printStackTrace();
+            kundeView.zeigeFehlermeldung("Fehler beim Löschen", exc.getMessage());
+            return false;
+        }
+    }
+
+    // Kunden lesen
+    public Kunde leseKunden(int hausnummer) {
+        try {
+            return kundeModel.leseKunden(hausnummer);
+        } catch (IOException exc) {
+            exc.printStackTrace();
+            kundeView.zeigeFehlermeldung("Fehler beim Lesen", exc.getMessage());
+            return null;
+        }
     }
 }

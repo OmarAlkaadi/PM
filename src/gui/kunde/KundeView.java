@@ -165,29 +165,80 @@ public class KundeView{
     	   
     }
     
-    private void leseKunden(){
+    private void leseKunden() {
+        Integer hausnummer = cmbBxNummerHaus.getValue();
+        if (hausnummer == null) {
+            leereEingabefelder();
+            return;
+        }
+
+        Kunde kunde = kundeControl.leseKunden(hausnummer);
+        if (kunde != null) {
+            txtKundennummer.setText(kunde.getKundennummer());
+            txtVorname.setText(kunde.getVorname());
+            txtNachname.setText(kunde.getNachname());
+            txtTelefonnummer.setText(kunde.getTelefonnummer());
+            txtEmail.setText(kunde.getEmail());
+        } else {
+            leereEingabefelder();
+        }
     }
     
-    private void legeKundenAn(){
-         Kunde kunde = new Kunde();
-         Integer plannummer = cmbBxNummerHaus.getValue();
-         // ohne Auswahl wird 0 gesetzt, die Pruefung lehnt dies ab
-         kunde.setHausnummer(plannummer == null ? 0 : plannummer);
-         kunde.setKundennummer(txtKundennummer.getText());
-         kunde.setVorname(txtVorname.getText());
-         kunde.setNachname(txtNachname.getText());
-         kunde.setTelefonnummer(txtTelefonnummer.getText());
-         kunde.setEmail(txtEmail.getText());
-         kundeControl.speichereKunden(kunde);
+    private void legeKundenAn() {
+        Kunde kunde = holeKundendaten();
+        kundeControl.speichereKunden(kunde);
+    }
 
-		 
-   	}
-    
-  	private void aendereKunden(){
-   	}
-  	
-   	private void loescheKunden(){
-   	}
+    private void aendereKunden() {
+        Kunde kunde = holeKundendaten();
+        kundeControl.aendereKunden(kunde);
+    }
+
+    private void loescheKunden() {
+        Integer hausnummer = cmbBxNummerHaus.getValue();
+        if (hausnummer == null) {
+            zeigeFehlermeldung("Keine Auswahl",
+                "Bitte wählen Sie zuerst eine Plannummer aus.");
+            return;
+        }
+
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.initOwner(borderPane.getScene().getWindow());
+        alert.setTitle("Kunde löschen");
+        alert.setHeaderText("Kunde wirklich löschen?");
+        alert.setContentText("Möchten Sie den Kunden für Haus "
+            + hausnummer + " wirklich löschen?");
+
+        alert.showAndWait().ifPresent(antwort -> {
+            if (antwort == ButtonType.OK) {
+                boolean geloescht = kundeControl.loescheKunden(hausnummer);
+                if (geloescht) {
+                    leereEingabefelder();
+                }
+            }
+        });
+    }
+
+    private Kunde holeKundendaten() {
+        Kunde kunde = new Kunde();
+        Integer hausnummer = cmbBxNummerHaus.getValue();
+        // Ohne Auswahl lehnt die Prüfung die Plannummer 0 ab.
+        kunde.setHausnummer(hausnummer == null ? 0 : hausnummer);
+        kunde.setKundennummer(txtKundennummer.getText());
+        kunde.setVorname(txtVorname.getText());
+        kunde.setNachname(txtNachname.getText());
+        kunde.setTelefonnummer(txtTelefonnummer.getText());
+        kunde.setEmail(txtEmail.getText());
+        return kunde;
+    }
+
+    private void leereEingabefelder() {
+        txtKundennummer.clear();
+        txtVorname.clear();
+        txtNachname.clear();
+        txtTelefonnummer.clear();
+        txtEmail.clear();
+    }
    	
    /** zeigt ein Fehlermeldungsfenster an
     * @param ueberschrift, Ueberschrift fuer das Fehlermeldungsfenster

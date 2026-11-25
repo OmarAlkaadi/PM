@@ -70,6 +70,13 @@ public final class KundeValidator {
 		if (emailVorhanden && !kunde.getEmail().contains("@")) {
 			fehler.add("Die E-Mail-Adresse muss ein @ enthalten.");
 		}
+		if (enthaeltUngueltigeZeichen(kunde.getKundennummer()) ||
+				enthaeltUngueltigeZeichen(kunde.getVorname()) ||
+				enthaeltUngueltigeZeichen(kunde.getNachname()) ||
+				enthaeltUngueltigeZeichen(kunde.getTelefonnummer()) ||
+				enthaeltUngueltigeZeichen(kunde.getEmail())) {
+			fehler.add("Semikolons, Anführungszeichen und Zeilenumbrüche sind in Kundendaten nicht erlaubt.");
+		}
 		return fehler;
 	}
 
@@ -80,6 +87,13 @@ public final class KundeValidator {
 	 */
 	public static boolean istGueltig(Kunde kunde) {
 		return pruefe(kunde).isEmpty();
+	}
+
+	// Die CSV-Datei verwendet Semikolons als Trenner und eine Zeile pro Kunde.
+	private static boolean enthaeltUngueltigeZeichen(String wert) {
+		return wert != null &&
+			(wert.contains(";") || wert.contains("\"") ||
+			 wert.contains("\n") || wert.contains("\r"));
 	}
 
 	// ein Text ist leer, falls er null ist oder nur aus Leerzeichen besteht

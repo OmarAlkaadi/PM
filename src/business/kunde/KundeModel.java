@@ -1,8 +1,9 @@
 package business.kunde;
-import java.io.File;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.sql.SQLException;
+
+import java.io.*;
+import java.nio.file.*;
+import java.nio.charset.Charset;
+import java.util.*;
 import javafx.collections.*;
   
 /** 
@@ -34,7 +35,7 @@ public final class KundeModel {
 	 *  @return KundeModel, welches das einzige Objekt dieses
 	 *          Typs ist.
 	 */
-	public static KundeModel getInstance(){
+	public static synchronized KundeModel getInstance(){
 		if(kundeModel == null){
 			kundeModel = new KundeModel();
 		}
@@ -56,62 +57,185 @@ public final class KundeModel {
 	public ObservableList<Integer> getPlannummern(){
 		return this.plannummern; 
 	}
-		 	
-	// ---- Datenbankzugriffe -------------------
-	
-	/**
-	 * speichert ein Kunde-Objekt in die Datenbank
-	 * @param kunde, Kunde-Objekt, welches zu speichern ist
-	 * @throws SQLException, Fehler beim Speichern in die Datenbank
-	 * @throws Exception, unbekannter Fehler
-	 */
-	public void speichereKunden(Kunde kunde)
-	    throws SQLException, Exception{
-       
-			//Jetzt nur CSV da wir kein DB haben
 
-			File datei = new File("kunden.csv");
-			boolean existiert = !datei.exists() || datei.length() == 0;
-		
-			try{
-				BufferedWriter writer = new BufferedWriter(new FileWriter(datei, true));
-				if (existiert) {
-					writer.write("Hausnummer;Kundennummer;Vorname;"
-                    + "Nachname;Telefonnummer;Email");
-          		  	writer.newLine();
-				}
-				
+	// ---- CSV-Dateizugriffe -------------------
 
-				// Kundendaten speichern
-				writer.write(
-					kunde.getHausnummer() + ";" +
-					csvWert(kunde.getKundennummer()) + ";" +
-					csvWert(kunde.getVorname()) + ";" +
-					csvWert(kunde.getNachname()) + ";" +
-					csvWert(kunde.getTelefonnummer()) + ";" +
-					csvWert(kunde.getEmail())
-				);
+	private final Path datei = Paths.get("kunden.csv");
 
-				writer.newLine();
-
-				// Datei schließen
-				writer.close();
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+	private final String kopfzeile =
+	        "Hausnummer;Kundennummer;Vorname;"
+	        + "Nachname;Telefonnummer;Email";
 
 
-		// Speicherung des Kunden in der DB (Später, wenn DB vorhanden)
-   	    this.kunde = kunde;
+	// Kunden anlegen
+	public void speichereKunden(Kunde kunde) throws IOException {
+
+	    List<Kunde> kunden = leseAlleKunden();
+
+	    // Prüfen, ob für dieses Haus bereits ein Kunde existiert
+	    for (Kunde k : kunden) {
+	        if (k.getHausnummer() == kunde.getHausnummer()) {
+	            throw new IOException(
+	                "Für dieses Haus existiert bereits ein Kunde."
+	            );
+	        }
+	    }
+
+	    kunden.add(kunde);
+
+	    schreibeAlleKunden(kunden);
+
+	    this.kunde = kunde;
 	}
+
+
+	// Kunden ändern
+	public void aendereKunden(Kunde kunde) throws IOException {
+
+	    List<Kunde> kunden = leseAlleKunden();
+
+	    for (int i = 0; i < kunden.size(); i++) {
+
+	        if (kunden.get(i).getHausnummer()
+	                == kunde.getHausnummer()) {
+
+	            kunden.set(i, kunde);
+
+	            schreibeAlleKunden(kunden);
+
+	            this.kunde = kunde;
+
+	            return;
+	        }
+	    }
+
+	    throw new IOException(
+	        "Es wurde kein Kunde für dieses Haus gefunden."
+	    );
+	}
+
+
+	// Kunden löschen
+	public void loescheKunden(int hausnummer) throws IOException {
+
+	    List<Kunde> kunden = leseAlleKunden();
+
+	    boolean geloescht = kunden.removeIf(
+	        k -> k.getHausnummer() == hausnummer
+	    );
+
+	    if (!geloescht) {
+	        throw new IOException(
+	            "Es wurde kein Kunde zum Löschen gefunden."
+	        );
+	    }
+
+	    schreibeAlleKunden(kunden);
+
+	    if (this.kunde != null
+	            && this.kunde.getHausnummer() == hausnummer) {
+	        this.kunde = null;
+	    }
+	}
+
+
 	
-	
-	//Hilfsmethode, um Sonderzeichen in CSV-Dateien zu maskieren
-	private String csvWert(String wert) {
-    if (wert == null) {
-        return "";
-    }
-    	return "\"" + wert.replace("\"", "\"\"") + "\"";
+	public Kunde leseKunden(int hausnummer) throws IOException {
+
+	    for (Kunde k : leseAlleKunden()) {
+
+	        if (k.getHausnummer() == hausnummer) {
+	            this.kunde = k;
+	            return k;
+	        }
+	    }
+
+	    this.kunde = null;
+
+	    return null;
+	}
+
+
+	// Alle Kunden aus der CSV-Datei lesen
+	private List<Kunde> leseAlleKunden() throws IOException {
+
+	    List<Kunde> kunden = new ArrayList<>();
+
+	    if (Files.notExists(datei)) {
+	        return kunden;
+	    }
+
+	    try (BufferedReader reader = Files.newBufferedReader(
+	            datei, Charset.defaultCharset())) {
+
+	        // Kopfzeile lesen und prüfen
+	        String ersteZeile = reader.readLine();
+
+	        if (ersteZeile == null) {
+	            return kunden;
+	        }
+	        if (!kopfzeile.equals(ersteZeile)) {
+	            throw new IOException("Ungültige CSV-Kopfzeile.");
+	        }
+
+	        String zeile;
+
+	        
+	        while ((zeile = reader.readLine()) != null) {
+
+	            if (zeile.trim().isEmpty()) {
+	                continue;
+	            }
+
+	            String[] daten = zeile.split(";", -1);
+
+	            if (daten.length != 6 || zeile.contains("\"")) {
+	                throw new IOException("Ungültiger Datensatz.");
+	            }
+
+	            Kunde k = new Kunde();
+
+	            k.setHausnummer(Integer.parseInt(daten[0]));
+	            k.setKundennummer(daten[1]);
+	            k.setVorname(daten[2]);
+	            k.setNachname(daten[3]);
+	            k.setTelefonnummer(daten[4]);
+	            k.setEmail(daten[5]);
+
+	            kunden.add(k);
+	        }
+	    } catch (NumberFormatException exc) {
+	        throw new IOException("Ungültige Hausnummer.", exc);
+	    }
+
+	    return kunden;
+	}
+
+
+	// Alle Kunden in die CSV-Datei schreiben
+	private void schreibeAlleKunden(List<Kunde> kunden)
+	        throws IOException {
+
+	    try (BufferedWriter writer = Files.newBufferedWriter(
+	            datei, Charset.defaultCharset())) {
+
+	        
+	        writer.write(kopfzeile);
+	        writer.newLine();
+
+	        
+	        for (Kunde k : kunden) {
+	            writer.write(
+	                k.getHausnummer() + ";" +
+	                Objects.toString(k.getKundennummer(), "") + ";" +
+	                Objects.toString(k.getVorname(), "") + ";" +
+	                Objects.toString(k.getNachname(), "") + ";" +
+	                Objects.toString(k.getTelefonnummer(), "") + ";" +
+	                Objects.toString(k.getEmail(), "")
+	            );
+
+	            writer.newLine();
+	        }
+	    }
 	}
 }

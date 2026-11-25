@@ -9,7 +9,7 @@ public class MeldungFenster {
         Alert alert = new Alert(AlertType.INFORMATION);
 
         alert.setTitle("Erfolgreich");
-        alert.setHeaderText("Kunde erfolgreich angelegt");
+        alert.setHeaderText("Vorgang erfolgreich");
         alert.setContentText(meldung);
 
         alert.showAndWait();
@@ -19,7 +19,7 @@ public class MeldungFenster {
         Alert alert = new Alert(AlertType.ERROR);
 
         alert.setTitle("Fehler");
-        alert.setHeaderText("Speicherung fehlgeschlagen");
+        alert.setHeaderText("Vorgang fehlgeschlagen");
         alert.setContentText(meldung);
 
         alert.showAndWait();

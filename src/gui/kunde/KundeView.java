@@ -166,6 +166,35 @@ public class KundeView{
     }
     
     private void leseKunden(){
+
+        Integer plannummer = cmbBxNummerHaus.getValue();
+
+        if (plannummer == null) {
+            return;
+        }
+
+        kundeControl.leseKunden(plannummer);
+    }
+
+
+    public void zeigeKunden(Kunde kunde) {
+
+        if (kunde == null) {
+
+            txtKundennummer.clear();
+            txtVorname.clear();
+            txtNachname.clear();
+            txtTelefonnummer.clear();
+            txtEmail.clear();
+
+            return;
+        }
+
+        txtKundennummer.setText(kunde.getKundennummer());
+        txtVorname.setText(kunde.getVorname());
+        txtNachname.setText(kunde.getNachname());
+        txtTelefonnummer.setText(kunde.getTelefonnummer());
+        txtEmail.setText(kunde.getEmail());
     }
     
     private void legeKundenAn(){

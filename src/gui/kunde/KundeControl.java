@@ -43,7 +43,33 @@ public class KundeControl {
       	}
     	this.grundrissControl.oeffneGrundrissView();
     }
-    
+
+
+
+	//Liest einen Kunden anhand der Plannummer aus der Datenbank.
+    public void leseKunden(int hausnummer) {
+
+		try {
+			Kunde kunde = kundeModel.leseKunden(hausnummer);
+
+			if (kunde != null) {
+				kundeView.zeigeKunden(kunde);
+			} else {
+				kundeView.zeigeKunden(null);
+			}
+
+		} catch (SQLException exc) {
+			exc.printStackTrace();
+
+			kundeView.zeigeFehlermeldung(
+				"Datenbankfehler",
+				"Kundendaten konnten nicht geladen werden:\n"
+				+ exc.getMessage()
+			);
+		}
+	}
+
+	
 	/**
 	 * prueft die Daten eines Kunde-Objekts und speichert es danach in die Datenbank.
 	 * Bei ungueltigen Daten wird eine Fehlermeldung angezeigt und nicht gespeichert.

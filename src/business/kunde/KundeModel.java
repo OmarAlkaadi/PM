@@ -60,6 +60,19 @@ public final class KundeModel {
 		 	
 	// ---- Datenbankzugriffe -------------------
 	
+
+ //Liest einen Kunden anhand der Plannummer aus der Datenbank.
+	public Kunde leseKunden(int hausnummer) throws SQLException {
+
+		this.kunde = kundeDAO.findeZuHaus(hausnummer);
+
+		return this.kunde;
+	}
+
+
+
+
+
 	/**
 	 * speichert ein Kunde-Objekt in die Datenbank
 	 * @param kunde, Kunde-Objekt, welches zu speichern ist

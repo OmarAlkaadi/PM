@@ -4,63 +4,106 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import business.db.DatenbankVerbindung;
+
 /**
- * Komponententests zu den CSV-Dateizugriffen der Klasse KundeModel.
- * KundeModel benutzt fest die Datei "kunden.csv". Deshalb wird eine vorhandene
- * Datei vor jedem Test gesichert und danach wiederhergestellt.
+ * Tests zu den Datenbankzugriffen der Klasse KundeModel.
+ *
+ * Die Tests legen Kunden an und loeschen sie. Deshalb laufen sie nur gegen eine
+ * lokale Datenbank (db.url mit localhost oder 127.0.0.1). Bei der gemeinsamen
+ * Online-Datenbank oder ohne erreichbare Datenbank werden sie uebersprungen.
+ * Benoetigt werden zwei freie Haeuser; vorhandene Kunden bleiben unveraendert.
  */
 class KundeModelTest {
 
-	private static final String KOPFZEILE =
-		"Hausnummer;Kundennummer;Vorname;Nachname;Telefonnummer;Email";
+	private static final String LOKALE_URL =
+		"jdbc:postgresql://(localhost|127\\.0\\.0\\.1)(:\\d+)?/.*";
 
-	private final Path datei = Paths.get("kunden.csv");
-	private final Path sicherung = Paths.get("kunden.csv.testsicherung");
+	// Kundennummern, die nur von diesen Tests benutzt werden
+	private static final String NUMMER_A = "99999000000000000001";
+	private static final String NUMMER_B = "99999000000000000002";
 
 	private final KundeModel model = KundeModel.getInstance();
 
+	private int hausA;
+	private int hausB;
 	private boolean vorbereitet;
-	private boolean dateiWarVorhanden;
 
 	@BeforeEach
-	void sichereDatei() throws IOException {
-		// eine alte Sicherung wird nie ueberschrieben
-		assertFalse(Files.exists(sicherung),
-			"Bitte zuerst " + sicherung + " pruefen und umbenennen.");
-		dateiWarVorhanden = Files.exists(datei);
-		if (dateiWarVorhanden) {
-			Files.move(datei, sicherung);
+	void bereiteDatenbankVor() throws SQLException {
+		assumeTrue(istLokaleDatenbank(),
+			"Uebersprungen: db.properties zeigt nicht auf eine lokale Datenbank.");
+		try {
+			DatenbankVerbindung.getConnection();
+		} catch (SQLException exc) {
+			assumeTrue(false, "Uebersprungen: keine Verbindung: " + exc.getMessage());
 		}
+		loescheTestkunden();
 		vorbereitet = true;
+
+		List<Integer> freie = freieHaeuser();
+		assumeTrue(freie.size() >= 2, "Uebersprungen: weniger als zwei freie Haeuser.");
+		hausA = freie.get(0);
+		hausB = freie.get(1);
 	}
 
 	@AfterEach
-	void stelleDateiWiederHer() throws IOException {
-		if (!vorbereitet) {
-			return;
-		}
-		Files.deleteIfExists(datei);
-		if (dateiWarVorhanden) {
-			Files.move(sicherung, datei);
+	void raeumeAuf() throws SQLException {
+		if (vorbereitet) {
+			loescheTestkunden();
 		}
 	}
 
-	private Kunde erzeugeKunden(int hausnummer, String nachname) {
+	// liest db.properties genauso wie DatenbankVerbindung
+	private static boolean istLokaleDatenbank() {
+		Properties konfig = new Properties();
+		try (InputStream in = new FileInputStream(DatenbankVerbindung.KONFIG_DATEI)) {
+			konfig.load(in);
+		} catch (IOException exc) {
+			return true; // ohne Datei benutzt die Anwendung localhost
+		}
+		String url = konfig.getProperty("db.url");
+		return url == null || url.trim().matches(LOKALE_URL);
+	}
+
+	private void loescheTestkunden() throws SQLException {
+		try (PreparedStatement ps = DatenbankVerbindung.getConnection().prepareStatement(
+				"DELETE FROM Kunde WHERE Kundennummer IN (?, ?)")) {
+			ps.setString(1, NUMMER_A);
+			ps.setString(2, NUMMER_B);
+			ps.executeUpdate();
+		}
+	}
+
+	private List<Integer> freieHaeuser() throws SQLException {
+		List<Integer> freie = new ArrayList<Integer>(model.getPlannummern());
+		for (Kunde kunde : new KundeDAO().findeAlle()) {
+			freie.remove(Integer.valueOf(kunde.getHausnummer()));
+		}
+		return freie;
+	}
+
+	private Kunde erzeugeKunden(String kundennummer, int hausnummer, String nachname) {
 		Kunde kunde = new Kunde();
+		kunde.setKundennummer(kundennummer);
 		kunde.setHausnummer(hausnummer);
-		kunde.setKundennummer("0042");
 		kunde.setVorname("Erika");
 		kunde.setNachname(nachname);
 		kunde.setTelefonnummer("0234123456");
@@ -68,20 +111,16 @@ class KundeModelTest {
 		return kunde;
 	}
 
-	private void schreibeDatei(String... zeilen) throws IOException {
-		Files.write(datei, List.of(zeilen), Charset.defaultCharset());
-	}
-
 	// ---- anlegen und lesen ----
 
 	@Test
-	void gespeicherterKundeWirdVollstaendigGelesen() throws IOException {
-		model.speichereKunden(erzeugeKunden(3, "Mustermann"));
+	void gespeicherterKundeWirdVollstaendigGelesen() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Mustermann"));
 
-		Kunde gelesen = model.leseKunden(3);
+		Kunde gelesen = model.leseKunden(hausA);
 
-		assertEquals(3, gelesen.getHausnummer());
-		assertEquals("0042", gelesen.getKundennummer());
+		assertEquals(NUMMER_A, gelesen.getKundennummer());
+		assertEquals(hausA, gelesen.getHausnummer());
 		assertEquals("Erika", gelesen.getVorname());
 		assertEquals("Mustermann", gelesen.getNachname());
 		assertEquals("0234123456", gelesen.getTelefonnummer());
@@ -89,102 +128,93 @@ class KundeModelTest {
 	}
 
 	@Test
-	void ersteZeileIstDieKopfzeile() throws IOException {
-		model.speichereKunden(erzeugeKunden(3, "Mustermann"));
-
-		assertEquals(KOPFZEILE,
-			Files.readAllLines(datei, Charset.defaultCharset()).get(0));
+	void freiesHausLiefertKeinenKunden() throws Exception {
+		assertNull(model.leseKunden(hausA));
 	}
 
 	@Test
-	void zweiterKundeFuerDasselbeHausWirdAbgelehnt() throws IOException {
-		model.speichereKunden(erzeugeKunden(3, "Erster"));
-
-		assertThrows(IOException.class,
-			() -> model.speichereKunden(erzeugeKunden(3, "Zweiter")));
-		assertEquals("Erster", model.leseKunden(3).getNachname());
-	}
-
-	@Test
-	void fehlendeWerteWerdenAlsLeererTextGelesen() throws IOException {
-		Kunde kunde = erzeugeKunden(3, "Mustermann");
-		kunde.setVorname(null);
-		kunde.setEmail(null);
+	void leereEmailWirdAlsNullGelesen() throws Exception {
+		Kunde kunde = erzeugeKunden(NUMMER_A, hausA, "Mustermann");
+		kunde.setEmail("");
 		model.speichereKunden(kunde);
 
-		assertEquals("", model.leseKunden(3).getVorname());
-		assertEquals("", model.leseKunden(3).getEmail());
+		assertNull(model.leseKunden(hausA).getEmail());
 	}
 
 	@Test
-	void ohneDateiWirdKeinKundeGefunden() throws IOException {
-		assertNull(model.leseKunden(3));
+	void zweiterKundeFuerDasselbeHausWirdAbgelehnt() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Erster"));
+
+		assertThrows(SQLException.class,
+			() -> model.speichereKunden(erzeugeKunden(NUMMER_B, hausA, "Zweiter")));
+		assertEquals("Erster", model.leseKunden(hausA).getNachname());
+	}
+
+	@Test
+	void doppelteKundennummerWirdAbgelehnt() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Erster"));
+
+		assertThrows(SQLException.class,
+			() -> model.speichereKunden(erzeugeKunden(NUMMER_A, hausB, "Zweiter")));
+		assertNull(model.leseKunden(hausB));
 	}
 
 	// ---- aendern ----
 
 	@Test
-	void aendernBetrifftNurDenKundenDesHauses() throws IOException {
-		model.speichereKunden(erzeugeKunden(1, "Eins"));
-		model.speichereKunden(erzeugeKunden(2, "Zwei"));
+	void aendernBetrifftNurDenKundenMitDerKundennummer() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Eins"));
+		model.speichereKunden(erzeugeKunden(NUMMER_B, hausB, "Zwei"));
 
-		model.aendereKunden(erzeugeKunden(2, "Neu"));
+		assertTrue(model.aendereKunden(erzeugeKunden(NUMMER_B, hausB, "Neu")));
 
-		assertEquals("Eins", model.leseKunden(1).getNachname());
-		assertEquals("Neu", model.leseKunden(2).getNachname());
+		assertEquals("Eins", model.leseKunden(hausA).getNachname());
+		assertEquals("Neu", model.leseKunden(hausB).getNachname());
 	}
 
 	@Test
-	void aendernOhneVorhandenenKundenSchlaegtFehl() {
-		assertThrows(IOException.class,
-			() -> model.aendereKunden(erzeugeKunden(3, "Mustermann")));
+	void aendernEinesUnbekanntenKundenLiefertFalse() throws Exception {
+		assertFalse(model.aendereKunden(erzeugeKunden(NUMMER_A, hausA, "Niemand")));
+	}
+
+	@Disabled("Offen: laut /A11/ darf Aendern die Hausnummer nicht aendern")
+	@Test
+	void aendernLaesstDieHausnummerUnveraendert() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Mustermann"));
+
+		model.aendereKunden(erzeugeKunden(NUMMER_A, hausB, "Mustermann"));
+
+		assertEquals(NUMMER_A, model.leseKunden(hausA).getKundennummer());
+		assertNull(model.leseKunden(hausB));
 	}
 
 	// ---- loeschen ----
 
 	@Test
-	void loeschenEntferntNurDenKundenDesHauses() throws IOException {
-		model.speichereKunden(erzeugeKunden(1, "Eins"));
-		model.speichereKunden(erzeugeKunden(2, "Zwei"));
+	void loeschenEntferntDenNamenNurBeiDiesemKunden() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Eins"));
+		model.speichereKunden(erzeugeKunden(NUMMER_B, hausB, "Zwei"));
 
-		model.loescheKunden(1);
+		assertTrue(model.loescheKunden(erzeugeKunden(NUMMER_A, hausA, "Eins")));
 
-		assertNull(model.leseKunden(1));
-		assertEquals("Zwei", model.leseKunden(2).getNachname());
+		// gilt fuer das heutige Verhalten und fuer /A11/
+		Kunde geloescht = model.leseKunden(hausA);
+		assertTrue(geloescht == null || geloescht.getNachname().isEmpty());
+		assertEquals("Zwei", model.leseKunden(hausB).getNachname());
 	}
 
 	@Test
-	void loeschenOhneVorhandenenKundenSchlaegtFehl() {
-		assertThrows(IOException.class, () -> model.loescheKunden(3));
+	void loeschenEinesUnbekanntenKundenLiefertFalse() throws Exception {
+		assertFalse(model.loescheKunden(erzeugeKunden(NUMMER_A, hausA, "Niemand")));
 	}
 
-	// ---- fehlerhafte Dateien ----
-
+	@Disabled("Offen: laut /A11/ bleiben Kundennummer und Haus beim Loeschen erhalten")
 	@Test
-	void falscheKopfzeileWirdAbgelehnt() throws IOException {
-		schreibeDatei("falsch");
+	void loeschenBehaeltKundennummerUndHaus() throws Exception {
+		model.speichereKunden(erzeugeKunden(NUMMER_A, hausA, "Mustermann"));
 
-		assertThrows(IOException.class, () -> model.leseKunden(1));
-	}
+		model.loescheKunden(erzeugeKunden(NUMMER_A, hausA, "Mustermann"));
 
-	@Test
-	void datensatzMitZuWenigenSpaltenWirdAbgelehnt() throws IOException {
-		schreibeDatei(KOPFZEILE, "1;0042;Erika");
-
-		assertThrows(IOException.class, () -> model.leseKunden(1));
-	}
-
-	@Test
-	void ungueltigeHausnummerWirdAbgelehnt() throws IOException {
-		schreibeDatei(KOPFZEILE, "x;0042;Erika;Mustermann;123;a@b.de");
-
-		assertThrows(IOException.class, () -> model.leseKunden(1));
-	}
-
-	@Test
-	void leereZeilenWerdenUebersprungen() throws IOException {
-		schreibeDatei(KOPFZEILE, "", "1;0042;Erika;Mustermann;123;a@b.de");
-
-		assertEquals("Mustermann", model.leseKunden(1).getNachname());
+		assertEquals(NUMMER_A, model.leseKunden(hausA).getKundennummer());
 	}
 }

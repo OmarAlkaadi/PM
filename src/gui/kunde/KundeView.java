@@ -129,16 +129,16 @@ public class KundeView{
     private void initListener(){
     	cmbBxNummerHaus.setOnAction(aEvent-> {
     		 holeInfoDachgeschoss();  
-    		// leseKunden();
+    		 leseKunden();
      	});
        	btnAnlegen.setOnAction(aEvent-> {
- 	      //  legeKundenAn();
+ 	        legeKundenAn();
 	    });
     	btnAendern.setOnAction(aEvent-> {
-          // 	aendereKunden();
+           	aendereKunden();
 	    });
        	btnLoeschen.setOnAction(aEvent-> { 
-           //	loescheKunden();
+           	loescheKunden();
 	    });
       	mnItmGrundriss.setOnAction(aEvent-> {
  	        kundeControl.oeffneGrundrissControl(); 
@@ -165,9 +165,86 @@ public class KundeView{
     	   
     }
     
+    private void leseKunden(){
+
+        Integer plannummer = cmbBxNummerHaus.getValue();
+
+        if (plannummer == null) {
+            return;
+        }
+
+        kundeControl.leseKunden(plannummer);
+    }
 
 
+    public void zeigeKunden(Kunde kunde) {
 
+        if (kunde == null) {
+
+            txtKundennummer.clear();
+            txtVorname.clear();
+            txtNachname.clear();
+            txtTelefonnummer.clear();
+            txtEmail.clear();
+
+            return;
+        }
+
+        txtKundennummer.setText(kunde.getKundennummer());
+        txtVorname.setText(kunde.getVorname());
+        txtNachname.setText(kunde.getNachname());
+        txtTelefonnummer.setText(kunde.getTelefonnummer());
+        txtEmail.setText(kunde.getEmail());
+    }
+    
+    private void legeKundenAn(){
+         Kunde kunde = new Kunde();
+         Integer plannummer = cmbBxNummerHaus.getValue();
+         // ohne Auswahl wird 0 gesetzt, die Pruefung lehnt dies ab
+         kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+         kunde.setKundennummer(txtKundennummer.getText());
+         kunde.setVorname(txtVorname.getText());
+         kunde.setNachname(txtNachname.getText());
+         kunde.setTelefonnummer(txtTelefonnummer.getText());
+         kunde.setEmail(txtEmail.getText());
+         kundeControl.speichereKunden(kunde);
+
+		 
+   	}
+    
+    private void aendereKunden() {
+
+        Kunde kunde = new Kunde();
+
+        Integer plannummer = cmbBxNummerHaus.getValue();
+
+        kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+        kunde.setKundennummer(txtKundennummer.getText());
+        kunde.setVorname(txtVorname.getText());
+        kunde.setNachname(txtNachname.getText());
+        kunde.setTelefonnummer(txtTelefonnummer.getText());
+        kunde.setEmail(txtEmail.getText());
+
+        kundeControl.aendereKunden(kunde);
+    }
+  	
+    //loeschen
+   	private void loescheKunden(){
+        Kunde kunde = new Kunde();
+
+        Integer plannummer = cmbBxNummerHaus.getValue();
+
+        kunde.setHausnummer(plannummer == null ? 0 : plannummer);
+        kunde.setKundennummer(txtKundennummer.getText());
+        kunde.setVorname(txtVorname.getText());
+        kunde.setNachname(txtNachname.getText());
+        kunde.setTelefonnummer(txtTelefonnummer.getText());
+        kunde.setEmail(txtEmail.getText());
+
+        kundeControl.loescheKunden(kunde);
+    }
+   	
+   	
    /** zeigt ein Fehlermeldungsfenster an
     * @param ueberschrift, Ueberschrift fuer das Fehlermeldungsfenster
     * @param meldung, String, welcher die Fehlermeldung enthaelt

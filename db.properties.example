@@ -1,0 +1,13 @@
+# Vorlage fuer die Datenbank-Zugangsdaten.
+# Kopieren nach "db.properties" (im Projektordner) und das Passwort eintragen.
+# Das Passwort bekommt ihr privat von Taha. db.properties wird NICHT eingecheckt.
+
+# Gemeinsame Online-Datenbank (Supabase)
+db.url=jdbc:postgresql://aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+db.benutzer=pm_app.hudsdjnwudtiuzepudpc
+db.passwort=HIER_PASSWORT_EINTRAGEN
+
+# Alternativ lokale Datenbank (siehe db/README.md, Abschnitt "Lokal")
+# db.url=jdbc:postgresql://localhost:5432/pm_db
+# db.benutzer=postgres
+# db.passwort=postgres

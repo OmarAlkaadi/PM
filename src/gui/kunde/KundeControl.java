@@ -6,7 +6,9 @@ import java.util.List;
 import business.kunde.Kunde;
 import business.kunde.KundeModel;
 import business.kunde.KundeValidator;
+import gui.fensteraussentueren.FensterAussentuerenControl;
 import gui.grundriss.GrundrissControl;
+import gui.innentueren.InnentuerenControl;
 import javafx.stage.Stage;
 import ownUtil.MeldungFenster;
 
@@ -22,6 +24,12 @@ public class KundeControl {
     /* das GrundrissControl-Objekt fuer die Sonderwuensche
        zum Grundriss zu dem Kunden */
     private GrundrissControl grundrissControl;
+    /* das FensterAussentuerenControl-Objekt fuer die Sonderwuensche
+       zu Fenstern und Aussentueren zu dem Kunden */
+    private FensterAussentuerenControl fensterAussentuerenControl;
+    /* das InnentuerenControl-Objekt fuer die Sonderwuensche
+       zu Innentueren zu dem Kunden */
+    private InnentuerenControl innentuerenControl;
     
     /**
 	 * erzeugt ein ControlObjekt inklusive View-Objekt und Model-Objekt zum 
@@ -42,6 +50,28 @@ public class KundeControl {
     		this.grundrissControl = new GrundrissControl(kundeModel);
       	}
     	this.grundrissControl.oeffneGrundrissView();
+    }
+
+    /*
+     * erstellt, falls nicht vorhanden, ein FensterAussentuerenControl-Objekt.
+     * Das FensterAussentuerenView wird sichtbar gemacht.
+     */
+    public void oeffneFensterAussentuerenControl(){
+    	if (this.fensterAussentuerenControl == null){
+    		this.fensterAussentuerenControl = new FensterAussentuerenControl(kundeModel);
+      	}
+    	this.fensterAussentuerenControl.oeffneFensterAussentuerenView();
+    }
+
+    /*
+     * erstellt, falls nicht vorhanden, ein InnentuerenControl-Objekt.
+     * Das InnentuerenView wird sichtbar gemacht.
+     */
+    public void oeffneInnentuerenControl(){
+    	if (this.innentuerenControl == null){
+    		this.innentuerenControl = new InnentuerenControl(kundeModel);
+      	}
+    	this.innentuerenControl.oeffneInnentuerenView();
     }
 
 

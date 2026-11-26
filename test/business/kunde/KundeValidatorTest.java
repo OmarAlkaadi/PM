@@ -206,6 +206,31 @@ class KundeValidatorTest {
 		assertFalse(KundeValidator.istGueltig(kunde));
 	}
 
+	// ---- Zeichen, die die CSV-Datei zerstoeren wuerden ----
+
+	@Test
+	void semikolonImNachnamenWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setNachname("Muster;mann");
+		assertEquals(1, KundeValidator.pruefe(kunde).size());
+	}
+
+	@Test
+	void anfuehrungszeichenImVornamenWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setVorname("Eri\"ka");
+		assertEquals(1, KundeValidator.pruefe(kunde).size());
+	}
+
+	@Test
+	void zeilenumbruchInEmailWirdAbgelehnt() {
+		Kunde kunde = erzeugeGueltigenKunden();
+		kunde.setEmail("erika@muster\nmann.de");
+		assertEquals(1, KundeValidator.pruefe(kunde).size());
+		kunde.setEmail("erika@muster\rmann.de");
+		assertEquals(1, KundeValidator.pruefe(kunde).size());
+	}
+
 	// ---- Sonderfaelle ----
 
 	@Test

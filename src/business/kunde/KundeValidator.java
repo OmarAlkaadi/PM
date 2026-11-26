@@ -13,6 +13,7 @@ import java.util.List;
  * 1.4 Die Kundennummer muss vorhanden sein und nur aus Ziffern bestehen
  *     (Absprache mit dem Product Owner). Die Eindeutigkeit kann hier nicht
  *     geprueft werden, sie wird ueber die Datenbank sichergestellt.
+ * 1.5 Die Texte duerfen nicht laenger sein als die Spalten der Tabelle Kunde.
  */
 public final class KundeValidator {
 
@@ -20,6 +21,10 @@ public final class KundeValidator {
 	public static final int MIN_PLANNUMMER = 1;
 	/** groesste erlaubte Plannummer */
 	public static final int MAX_PLANNUMMER = 24;
+	/** groesste erlaubte Laenge der Kundennummer (Spalte VARCHAR(20)) */
+	public static final int MAX_LAENGE_KUNDENNUMMER = 20;
+	/** groesste erlaubte Laenge der uebrigen Texte (Spalten VARCHAR(45)) */
+	public static final int MAX_LAENGE_TEXT = 45;
 
 	// Hilfsklasse, es werden keine Objekte erzeugt
 	private KundeValidator() {
@@ -77,7 +82,21 @@ public final class KundeValidator {
 				enthaeltUngueltigeZeichen(kunde.getEmail())) {
 			fehler.add("Semikolons, Anführungszeichen und Zeilenumbrüche sind in Kundendaten nicht erlaubt.");
 		}
+
+		// 1.5 Laengen
+		pruefeLaenge(fehler, "Die Kundennummer", kunde.getKundennummer(), MAX_LAENGE_KUNDENNUMMER);
+		pruefeLaenge(fehler, "Der Vorname", kunde.getVorname(), MAX_LAENGE_TEXT);
+		pruefeLaenge(fehler, "Der Nachname", kunde.getNachname(), MAX_LAENGE_TEXT);
+		pruefeLaenge(fehler, "Die Telefonnummer", kunde.getTelefonnummer(), MAX_LAENGE_TEXT);
+		pruefeLaenge(fehler, "Die E-Mail-Adresse", kunde.getEmail(), MAX_LAENGE_TEXT);
 		return fehler;
+	}
+
+	// meldet einen Fehler, falls der Text laenger als erlaubt ist
+	private static void pruefeLaenge(List<String> fehler, String feld, String wert, int maximum) {
+		if (wert != null && wert.trim().length() > maximum) {
+			fehler.add(feld + " darf hoechstens " + maximum + " Zeichen lang sein.");
+		}
 	}
 
 	/**

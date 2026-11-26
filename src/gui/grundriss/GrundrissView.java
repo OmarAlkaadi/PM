@@ -43,9 +43,37 @@ public class GrundrissView extends BasisView{
        	super.getGridPaneSonderwunsch().add(lblWandKueche, 0, 1);
     	super.getGridPaneSonderwunsch().add(txtPreisWandKueche, 1, 1);
     	txtPreisWandKueche.setEditable(false);
+        txtPreisWandKueche.setPrefColumnCount(6);
     	super.getGridPaneSonderwunsch().add(lblWandKuecheEuro, 2, 1);
     	super.getGridPaneSonderwunsch().add(chckBxWandKueche, 3, 1);
-    }  
+        fuegeGrundrissOptionHinzu("Tuer in der Wand zwischen Kueche und Essbereich", 2);
+        fuegeGrundrissOptionHinzu("Grosses Zimmer im OG statt zwei kleinen Zimmern", 3);
+        fuegeGrundrissOptionHinzu("Abgetrennter Treppenraum im DG", 4);
+        fuegeGrundrissOptionHinzu("Vorrichtung eines Bades im DG", 5);
+        fuegeGrundrissOptionHinzu("Ausfuehrung eines Bades im DG", 6);
+    }
+
+    /**
+     * Fuegt eine Grundrissoption mit Preisfeld und Checkbox zur Maske hinzu.
+     *
+     * @param bezeichnung der Text, der fuer die Option angezeigt wird
+     * @param zeile die Zeilennummer im Raster der Grundrissmaske
+     */
+    private void fuegeGrundrissOptionHinzu(String bezeichnung, int zeile) {
+        Label lblVariante = new Label(bezeichnung);
+
+        TextField txtPreis = new TextField();
+        txtPreis.setEditable(false);
+        txtPreis.setPrefColumnCount(6);
+
+        CheckBox auswahl = new CheckBox();
+        lblVariante.setLabelFor(auswahl);
+        auswahl.setAccessibleText(bezeichnung);
+
+        getGridPaneSonderwunsch().addRow(
+            zeile, lblVariante, txtPreis, new Label("Euro"), auswahl
+        );
+    }
     
     /**
 	 * macht das GrundrissView-Objekt sichtbar.
